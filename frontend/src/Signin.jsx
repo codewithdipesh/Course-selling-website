@@ -3,6 +3,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
+import axios from 'axios'
 
 
 const Signin = () => {
@@ -63,24 +64,27 @@ const Signin = () => {
             variant="contained"
             disabled={isSigninButtonDisabled}
             onClick={() => {
-              function call2(data){
-                localStorage.setItem("token",data.token) 
-                // history.push("/Home")
-                window.location = "/home"
-            }   
-                
-             function call1(res){
-                res.json().then(call2)
-             }
-    
-                fetch('http://localhost:3000/admin/login', {
-                method: "POST",
-                headers: {
-                  "Content-type": "application/json",
-                  "username" : username,
-                  "password" : password
+              const fetchdata = async()=>{
+                try{
+                  const res =  await axios.post('http://localhost:3000/admin/login',{},
+                  {
+                  headers: {
+                    "Content-type": "application/json",
+                    "username" : username,
+                    "password" : password
+                  },
+                })
+                    let data = res.data
+                    localStorage.setItem("token",data.token) 
+                    // history.push("/Home")
+                    window.location = "/home"
                 }
-              }).then(call1);
+                catch(error){
+                 console.log("fetching error")
+                }
+            }
+              
+            fetchdata();
              }}
           >
             <Typography variant="h6">Sign in</Typography>

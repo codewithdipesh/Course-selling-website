@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
+import axios from "axios"
 
 const Signup = () => {
  
@@ -69,27 +70,25 @@ const Signup = () => {
         variant="contained"
         disabled={isSignupButtonDisabled}
         onClick= {()=>{
-            
-        function call2(data){
-            localStorage.setItem("token",data.token) 
-            // history.push("/Home")
-            window.location = "/home"
-        }   
-            
-         function call1(res){
-            res.json().then(call2)
-         }
-
-            fetch('http://localhost:3000/admin/signup', {
-            method: "POST",
-            body: JSON.stringify({
-              username,
-              password
-            }),
-            headers: {
-              "Content-type": "application/json"
+        
+          const fetchdata = async()=>{
+            try{
+              const res =  await axios.post('http://localhost:3000/admin/signup', {
+                username,
+                password
+              },
+              )
+                let data = res.data
+                localStorage.setItem("token",data.token) 
+                // history.push("/Home")
+                window.location = "/home"
             }
-          }).then(call1);
+            catch(error){
+              console.log("fetching error")
+            }
+        }
+          
+        fetchdata();
          }}
       >
        <Typography > Sign Up</Typography>

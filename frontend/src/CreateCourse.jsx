@@ -3,6 +3,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import { TextField } from '@mui/material';
+import axios from "axios"
 function CreateCourse() {
 
   const[title,settitle] = useState("")
@@ -72,29 +73,31 @@ function CreateCourse() {
        
         onClick= {()=>{
 
-          function call2(data){
-            alert("course added!")
-        }    
-            
-         function call1(res){
-            res.json().then(call2)
+         const fetchdata = async ()=>{
+
+          try{
+             await axios.post('http://localhost:3000/admin/courses', {
+              title,
+              description,
+              price,
+              imageLink,
+              published:true
+             },
+             {
+             headers: {
+               "Content-type": "application/json",
+               "Authorization": "Bearer " + localStorage.getItem("token")
+             }
+           })
+
+           alert("course added!!")
+           
+          }catch(error){
+            console.log("fetch error")
+          }
          }
 
-            fetch('http://localhost:3000/admin/courses', {
-            method: "POST",
-            body: JSON.stringify({
-             title,
-             description,
-             price,
-             imageLink,
-             published:true
-            }),
-            headers: {
-              "Content-type": "application/json",
-              "Authorization": "Bearer " + localStorage.getItem("token")
-            }
-          }).then(call1);
-            
+         fetchdata();
         }}
       >
        Add Course
