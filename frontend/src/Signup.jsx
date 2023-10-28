@@ -81,7 +81,7 @@ const Signup = () => {
                 let data = res.data
                 localStorage.setItem("token",data.token) 
                 // history.push("/Home")
-                window.location = "/home"
+                window.location = "/"
             }
             catch(error){
               console.log("fetching error")

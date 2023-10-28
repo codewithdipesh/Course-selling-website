@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {Card,Typography,Button,TextField} from '@mui/material'
+import {Card,Typography,Button,TextField,Grid} from '@mui/material'
 import { useParams } from "react-router-dom";
+import axios from "axios"
 
 
 function Course() {
@@ -54,15 +55,21 @@ function Course() {
       );
   }
 
-  return (
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 100 }}>
-          <div>
-              <CourseCard course={course} />
-          </div>
-          <div>
-              <UpdatedCard course={course} setCourse={setCourse} />
-          </div>
-      </div>
+  return (<>
+  <GrayTopper course={course}/>
+
+    <Grid container>
+      <Grid item sm={12} md={12} lg={8}>
+          <UpdatedCard course={course} setCourse={setCourse} courseId={courseId}/>
+
+       </Grid>
+          
+     <Grid item sm={12} md={12} lg={4}>
+     <CourseCard course={course} />
+      </Grid>
+    </Grid>
+     
+      </>
   );
 }
 
@@ -71,24 +78,24 @@ function Course() {
 
 
 function UpdatedCard(props) {
-
-  const[title,settitle] = useState("")
-  const[description,setdescription] = useState("")
-  const[price,setprice] = useState(0)
-  const[imageLink,setImage] = useState("")
   const course = props.course
+  const[title,settitle] = useState(course.title)
+  const[description,setdescription] = useState(course.description)
+  const[price,setprice] = useState(course.price)
+  const[imageLink,setImage] = useState(course.imageLink)
   const { courseId } = useParams();
   
 
   return (
     <>  <div style={{display:"flex",justifyContent:"center"}}>
       
-      <Card  variant='outlined' style={{width:400,padding:15 ,margin:10}}> 
+      <Card  variant='outlined'  style={{width:"80%",padding:15 ,maxWidth: 600, marginTop: 200}}> 
          
       <div style={{display:"flex",justifyContent:"center"}}>
          <Typography varient={"h2"} fontFamily={"Arial"} fontWeight={"bold"}>Update Course Details</Typography>
       </div>
       <TextField
+        value={title}
         fullWidth={true}
         label="Title"
         variant="outlined"
@@ -99,6 +106,7 @@ function UpdatedCard(props) {
       <br/>
       <br/>
       <TextField
+        value={description}
         fullWidth={true}
         label="Description"
         variant="outlined"
@@ -109,6 +117,7 @@ function UpdatedCard(props) {
       <br/>
       <br/>
       <TextField
+        value={price}
         fullWidth={true}
         label="Price"
         variant="outlined"
@@ -120,6 +129,7 @@ function UpdatedCard(props) {
       <br/>
       <br/>
       <TextField
+        value={imageLink}
         fullWidth={true}
         label="ImageLink"
         variant="outlined"
@@ -141,29 +151,31 @@ function UpdatedCard(props) {
        
         onClick= {()=>{
 
-          function call2(data){
-            props.setCourse(data)
-        }    
-            
-         function call1(res){
-            res.json().then(call2)
-         }
+          const update = async ()=>{
+            try{
+              const response = await axios.put(`http://localhost:3000/admin/course/${courseId}`, {
+                title,
+                description,
+                price,
+                imageLink,
+                published:true
+               },{
+               headers: {
+                 "Content-type": "application/json",
+                 "Authorization": "Bearer " + localStorage.getItem("token")
+               }
+             })
 
-            fetch(`http://localhost:3000/admin/course/${courseId}`, {
-            method: "PUT",
-            body: JSON.stringify({
-             title,
-             description,
-             price,
-             imageLink,
-             published:true
-            }),
-            headers: {
-              "Content-type": "application/json",
-              "Authorization": "Bearer " + localStorage.getItem("token")
+             const data = response.data
+             props.setCourse(data)
+
+            }catch(error){
+              console.log("fetching error",error)
             }
-          }).then(call1);
-            
+
+          }
+
+            update()     
         }}
       >
        Update Course
@@ -194,12 +206,23 @@ function CourseCard(props){
     justifyContent : "center"}}>
 
 <Card
-   variant='outlined' style={{width:400,padding:15 ,margin:10,minHeight:350}}>
+   variant='outlined' style={{ margin: 10,
+    width: 350,
+    minHeight: 200,
+    borderRadius: 20,
+    marginRight: 50,
+    marginTop:50,
+    paddingBottom: 15,
+    zIndex: 2}}>
   <Typography textAlign={"center"} variant={"h6"} fontFamily={"Arial"} fontWeight={"bold"}>{course.title}</Typography>
   <br />
   <br />
   <Typography textAlign={"center"} variant={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>{course.description}</Typography>
   <img src={course.imageLink} alt="Course Image" style={{ width: 400, height: 225 }} />
+  <div style={{marginRight:10}}>
+          <Typography  fontFamily={"Arial"} fontSize={14}>Price</Typography>
+          <Typography  fontFamily={"Arial"} fontSize={20} fontWeight={"Bold"}>${course.price}</Typography>
+        </div>
 </Card>
 
     </div>
@@ -207,6 +230,21 @@ function CourseCard(props){
     
 
   )
+}
+
+
+
+function GrayTopper(props) {
+  const title = props.course.title
+  return <div style={{height: 250, background: "#212121", top: 0, width: "100%", zIndex: 0, marginBottom: -250,marginRight:-10}}>
+      <div style={{ height: 250, display: "flex", justifyContent: "center", flexDirection: "column"}}>
+          <div>
+              <Typography style={{color: "white", fontWeight: 600}} variant="h3" textAlign={"center"}>
+                  {title}
+              </Typography>
+          </div>
+      </div>
+  </div>
 }
 
 export default Course;

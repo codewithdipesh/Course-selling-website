@@ -6,7 +6,7 @@ import { TextField } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-
+import axios from 'axios';
 
 
 
@@ -17,24 +17,30 @@ import { useNavigate } from 'react-router-dom';
 function Courses() {
      const navigate = useNavigate()
     const[courses,setCourses] = useState([])
-  useEffect(()=>{
-    function call2(data){
-      setCourses(data.courses);
-     
-      }   
-        
-     function call1(res){
-        res.json().then(call2)
+
+   const getCourses = async()=>{
+    try{
+      const response = await axios.get("http://localhost:3000/admin/courses",
+      {
+       headers:{
+         'Content-Type': 'application/json',
+         "Authorization":"Bearer " + localStorage.getItem("token")
+       }
+     })
+    
+     if(response.data.courses){
+      setCourses(response.data.courses)
      }
-        fetch("http://localhost:3000/admin/courses",{
-          method :"GET",
-          headers:{
-            'Content-Type': 'application/json',
-            "Authorization":"Bearer " + localStorage.getItem("token")
-          }
-        }).then(call1)
-        
-  })
+
+    }catch(error){
+      console.log("fetching error",error)
+    }
+   }
+
+
+  useEffect(()=>{
+       getCourses();
+     },[])
 
   return (
     <>  
@@ -62,7 +68,7 @@ function Courses() {
 
 
 function Course(props) {
-  const {  title, description, imageLink } = props.course;
+  const {  title, description,price, imageLink } = props.course;
   const id = props.id
   return (
     <div>
@@ -77,9 +83,21 @@ function Course(props) {
         <br />
         <Typography textAlign={"center"} varient={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>{description}</Typography>
         <img src={imageLink} style={{ width: 300, height: 200 }} alt="Course" />
-        <Button onClick={() => {
+       <div
+       style={{display:"flex",justifyContent:"space-between"}}>
+       <div style={{marginLeft:10}}>
+        <Button variant='contained'
+         onClick={() => {
           props.navigate(`/course/${id}`);
-        }}>See Details</Button>
+        }}>EDIT</Button>
+        </div>
+        <div style={{marginRight:10}}>
+          <Typography  fontFamily={"Arial"} fontSize={14}>Price</Typography>
+          <Typography  fontFamily={"Arial"} fontSize={20} fontWeight={"Bold"}>${price}</Typography>
+        </div>
+       </div>
+       
+
       </Card>
     </div>
   );
