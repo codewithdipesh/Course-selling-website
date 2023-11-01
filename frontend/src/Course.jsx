@@ -2,44 +2,56 @@ import React, { useState, useEffect } from 'react';
 import {Card,Typography,Button,TextField,Grid} from '@mui/material'
 import { useParams } from "react-router-dom";
 import axios from "axios"
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { courseDescription, courseImage, coursePrice, courseTitle, isCourseloading } from './Store/selectors/course';
+import { courseState } from './Store/atoms/course';
 
 
 function Course() {
   const { courseId } = useParams();
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const courseLoading = useRecoilValue(isCourseloading)
+  const Setcourse = useSetRecoilState(courseState);
 
   useEffect(() => {
       async function fetchCourse() {
           try {
-              const response = await fetch(`http://localhost:3000/admin/course/${courseId}`, {
-                  method: "GET",
+              const response = await axios.get(`http://localhost:3000/admin/course/${courseId}`, {
                   headers: {
                       'Content-Type': 'application/json',
                       "Authorization": "Bearer " + localStorage.getItem("token")
                   }
               });
+              const data = response.data;
 
-              if (response.status === 200) {
-                  const data = await response.json();
-                  setCourse(data);
-              } else if (response.status === 404) {
-                  setCourse(null);
-              } else {
-                  // Handle other error cases
+              if(data){
+                console.log(data.course.title)
+                Setcourse({
+                  course:{
+                    title:data.course.title,
+                    description:data.course.description,
+                    price:data.course.price,
+                    imageLink:data.course.imageLink
+                  },
+                  isLoading:false
+                })
+              }else{
+                Setcourse({
+                  course:null,
+                  isLoading:false
+                })
               }
+              
+             
           } catch (error) {
-              console.error(error);
-              // Handle fetch error
-          } finally {
-              setLoading(false);
-          }
+            console.log("fetching error")
+           
+          } 
       }
 
       fetchCourse();
-  }, [courseId]);
+  }, []);
 
-  if (loading) {
+  if (courseLoading) {
       return (
           <div style={{paddingTop:300}}>
               <Typography textAlign={"center"} variant={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>Loading......</Typography>
@@ -47,25 +59,19 @@ function Course() {
       );
   }
 
-  if (course === null) {
-      return (
-          <div>
-              <Typography textAlign={"center"} variant={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>404 NOT FOUND</Typography>
-          </div>
-      );
-  }
+ 
 
   return (<>
-  <GrayTopper course={course}/>
+  <GrayTopper/>
 
     <Grid container>
       <Grid item sm={12} md={12} lg={8}>
-          <UpdatedCard course={course} setCourse={setCourse} courseId={courseId}/>
+          <UpdatedCard />
 
        </Grid>
           
      <Grid item sm={12} md={12} lg={4}>
-     <CourseCard course={course} />
+     <CourseCard/>
       </Grid>
     </Grid>
      
@@ -77,19 +83,20 @@ function Course() {
 
 
 
-function UpdatedCard(props) {
-  const course = props.course
-  const[title,settitle] = useState(course.title)
-  const[description,setdescription] = useState(course.description)
-  const[price,setprice] = useState(course.price)
-  const[imageLink,setImage] = useState(course.imageLink)
+function UpdatedCard() {
   const { courseId } = useParams();
+  const [Details,SetCourse] = useRecoilState(courseState)
+  const[title,settitle] = useState(Details.course.title)
+  const[description,setdescription] = useState(Details.course.description)
+  const[price,setprice] = useState(Details.course.price)
+  const[imageLink,setImage] = useState(Details.course.imageLink)
+  
   
 
   return (
     <>  <div style={{display:"flex",justifyContent:"center"}}>
       
-      <Card  variant='outlined'  style={{width:"80%",padding:15 ,maxWidth: 600, marginTop: 200}}> 
+      <Card  variant='outlined'  style={{width:"80%",padding:15 ,maxWidth: 600, marginTop: 200,borderRadius:30}}> 
          
       <div style={{display:"flex",justifyContent:"center"}}>
          <Typography varient={"h2"} fontFamily={"Arial"} fontWeight={"bold"}>Update Course Details</Typography>
@@ -153,7 +160,7 @@ function UpdatedCard(props) {
 
           const update = async ()=>{
             try{
-              const response = await axios.put(`http://localhost:3000/admin/course/${courseId}`, {
+               await axios.put(`http://localhost:3000/admin/course/${courseId}`, {
                 title,
                 description,
                 price,
@@ -166,11 +173,22 @@ function UpdatedCard(props) {
                }
              })
 
-             const data = response.data
-             props.setCourse(data)
+             SetCourse({
+              course:{
+                _id:Details.course._id,
+                title:title,
+                description:description,
+                imageLink:imageLink,
+                price:price
+              },
+              isLoading:false
+
+             })
+            
 
             }catch(error){
-              console.log("fetching error",error)
+            
+             console.log("fetching error update time",error)
             }
 
           }
@@ -197,9 +215,11 @@ function UpdatedCard(props) {
 
 
 
-function CourseCard(props){
+function CourseCard(){
    
-  const course = props.course
+  const description = useRecoilValue(courseDescription)
+  const Image = useRecoilValue(courseImage)
+  const Price = useRecoilValue(coursePrice)
   return  (
     
     <div style={{display:"flex",
@@ -214,14 +234,15 @@ function CourseCard(props){
     marginTop:50,
     paddingBottom: 15,
     zIndex: 2}}>
-  <Typography textAlign={"center"} variant={"h6"} fontFamily={"Arial"} fontWeight={"bold"}>{course.title}</Typography>
+      
+   <img src={Image} alt="Course Image" style={{ width: 400, height: 225 }} />
   <br />
   <br />
-  <Typography textAlign={"center"} variant={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>{course.description}</Typography>
-  <img src={course.imageLink} alt="Course Image" style={{ width: 400, height: 225 }} />
+  <Typography textAlign={"center"} variant={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>{description}</Typography>
+ 
   <div style={{marginRight:10}}>
           <Typography  fontFamily={"Arial"} fontSize={14}>Price</Typography>
-          <Typography  fontFamily={"Arial"} fontSize={20} fontWeight={"Bold"}>${course.price}</Typography>
+          <Typography  fontFamily={"Arial"} fontSize={20} fontWeight={"Bold"}>${Price}</Typography>
         </div>
 </Card>
 
@@ -234,8 +255,10 @@ function CourseCard(props){
 
 
 
-function GrayTopper(props) {
-  const title = props.course.title
+function GrayTopper() {
+  const title = useRecoilValue(courseTitle)
+  console.log(title)
+ 
   return <div style={{height: 250, background: "#212121", top: 0, width: "100%", zIndex: 0, marginBottom: -250,marginRight:-10}}>
       <div style={{ height: 250, display: "flex", justifyContent: "center", flexDirection: "column"}}>
           <div>

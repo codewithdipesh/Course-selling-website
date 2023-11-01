@@ -72,7 +72,7 @@ router.post('/signup', async (req, res) => { //notes
     try {
       const course = await Course.findById(courseId);
       if (course) {
-        res.status(200).json(course);
+        res.status(200).json({course:course});
       } else {
         res.status(404).json({ message: 'Course not found' });
       }

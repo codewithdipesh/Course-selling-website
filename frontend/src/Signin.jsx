@@ -4,13 +4,18 @@ import TextField from '@mui/material/TextField';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom';
+import { useSetRecoilState } from 'recoil';
+import { userState } from './Store/atoms/user';
 
 
 const Signin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
+  const setUser = useSetRecoilState(userState)
+  const navigate = useNavigate();
+
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
   };
@@ -76,8 +81,11 @@ const Signin = () => {
                 })
                     let data = res.data
                     localStorage.setItem("token",data.token) 
-                    // history.push("/Home")
-                    window.location = "/"
+                    setUser({
+                      isLoading:false,
+                      userEmail:username
+                    })
+                    navigate("/")
                 }
                 catch(error){
                  console.log("fetching error")

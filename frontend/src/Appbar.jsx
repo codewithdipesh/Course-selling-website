@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
+import {Typography} from "@mui/material";
+import Button from "@mui/material/Button";
 import { useNavigate } from "react-router-dom";
+
+import {useSetRecoilState, useRecoilValue} from "recoil";
+import { userState } from "./Store/atoms/user.js";
+import { userEmailState } from "./Store/selectors/userEmail"
 import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
-import axios from "axios";
+import { isUserLoading } from "./Store/selectors/isUserLoading";
+
 
 
 
@@ -25,32 +28,16 @@ const theme = createTheme({
 
 function Appbar() {
   const navigate = useNavigate();
-  const [name, setName] = useState(null);
-
-  const init = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/admin/me", {
-        headers: {
-          'Content-Type': 'application/json',
-          "Authorization": "Bearer " + localStorage.getItem("token")
-        }
-      });
-
-      if (response.data.username) {
-        setName(response.data.username);
-      }
-    } catch (error) {
-      console.log("fetching error", error);
-    }
-  }
-
-  useEffect(() => {
-    init();
-  }, []);
-
+  const userEmail = useRecoilValue(userEmailState);
+  const userLoading = useRecoilValue(isUserLoading)
+  const setUser = useSetRecoilState(userState)
   
+  if(userLoading){
+    return <></>
+  }
  
-    return (
+  if(userEmail){
+     return (
      
          <div style={{ display: "flex", justifyContent: "space-between",backgroundColor:"#bbcffd",marginTop:-10,marginRight:-10,marginLeft:-10}}>
          <div style={{marginLeft: 10, cursor: "pointer"}} onClick={() => {
@@ -59,40 +46,7 @@ function Appbar() {
                 <Typography variant={"h6"} style={{fontFamily:"Arial",fontWeight:"bold",margin:20,fontSize:25}}>Coursera</Typography>
             </div>
         <div style={{ display: "flex" }}>
-       {  name && <Loggedin name={name} navigate={navigate}/> }
-        { !name && <Loggedout navigate={navigate}/>}
-        </div>
-      </div>
       
-      
-    )
-  
-}
-
-function Loggedout({navigate}){
-  return(
-    <>
-    <div>
-            <Button variant="contained" style={{ margin: 8 }} onClick={() => {
-              navigate("/signup");
-            }}>
-              Sign up
-            </Button>
-          </div>
-          <div>
-            <Button variant="contained" style={{ margin: 8 }} onClick={() => {
-              navigate("/login");
-            }}>
-              Sign in
-            </Button>
-          </div>
-
-    </>
-  )
-}
-function Loggedin({name,navigate}){
-  return (<>
-
 <div>
 <div style={{marginLeft: 10, cursor: "pointer"}} onClick={() => {
                 navigate("/courses")
@@ -117,8 +71,11 @@ function Loggedin({name,navigate}){
 <div>
   <ThemeProvider theme={theme}>
           <Button variant="contained" size="medium" style={{marginTop:15,marginRight:10}} onClick={()=>{
-              localStorage.setItem("token", null);
-              window.location = "/login";
+            localStorage.setItem("token",null)
+              setUser({  
+                isLoading:false,
+                userEmail:null
+              })
           }} >
              <Typography varient={"h2"} fontFamily={"Arial"} fontWeight={"bold"}>
            Log Out
@@ -126,7 +83,47 @@ function Loggedin({name,navigate}){
           </Button>
         </ThemeProvider>
 </div>
-  </>)
+        </div>
+      </div>
+      
+      
+    )
+
+  }
+  else{
+    return (
+     
+      <div style={{ display: "flex", justifyContent: "space-between",backgroundColor:"#bbcffd",marginTop:-10,marginRight:-10,marginLeft:-10}}>
+      <div style={{marginLeft: 10, cursor: "pointer"}} onClick={() => {
+             navigate("/")
+         }}>
+             <Typography variant={"h6"} style={{fontFamily:"Arial",fontWeight:"bold",margin:20,fontSize:25}}>Coursera</Typography>
+         </div>
+     <div style={{ display: "flex" }}>
+     <div>
+            <Button variant="contained" style={{ margin: 8 }} onClick={() => {
+              navigate("/signup");
+            }}>
+              Sign up
+            </Button>
+          </div>
+          <div>
+            <Button variant="contained" style={{ margin: 8 }} onClick={() => {
+              navigate("/login");
+            }}>
+              Sign in
+            </Button>
+          </div>
+     </div>
+   </div>
+   
+   
+ )
+  }
+   
+  
 }
+
+
 
 export default Appbar;

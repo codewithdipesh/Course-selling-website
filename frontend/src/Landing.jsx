@@ -6,8 +6,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 import { Grid } from "@mui/material";
+import { useRecoilValue } from "recoil";
+import { userEmailState } from "./Store/selectors/userEmail";
+import { isUserLoading } from "./Store/selectors/isUserLoading";
 
- const theme = createTheme({
+ const theme1 = createTheme({
   palette: {
     primary: {
       main: '#1b0f93',
@@ -18,38 +21,25 @@ import { Grid } from "@mui/material";
    
   },
 });
+ const theme2 = createTheme({
+  palette: {
+    primary: {
+      main: '#4145e1',
+      // light: will be calculated from palette.primary.main,
+      // dark: will be calculated from palette.primary.main,
+      // contrastText: will be calculated to contrast with palette.primary.main
+    },
+   
+  },
+});
 
 function Landing() {
   const navigate = useNavigate();
-  const [name, setName] = useState(null); 
+  const userEmail = useRecoilValue(userEmailState)
+  const Loading = useRecoilValue(isUserLoading)
 
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/admin/me", {
-          headers: {
-            'Content-Type': 'application/json',
-            "Authorization": "Bearer " + localStorage.getItem("token")
-          }
-        });
-
-        const data = response.data;
-        setName(data.username);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-        // Handle errors here
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
+  if (Loading) {
     return (
       <div style={{ paddingTop: 300 }}>
         <Typography textAlign={"center"} variant={"subtitle1"} fontFamily={"Arial"} fontWeight={"bold"}>
@@ -67,8 +57,8 @@ function Landing() {
           <Typography style={{fontFamily:"sans-serif", fontWeight:"bold", fontSize:"3vw"}}>Come <span style={{color:"#013c8a"}}>Teach</span> With <span style={{color:"#013c8a"}}>Us</span></Typography>
           <Typography style={{fontFamily:"sans-serif", fontSize:"1.8vw" }}>Become an instructor and Share <span style={{display:"block"}}> your knolwedge</span></Typography>
          <br/>
-        {!loading && name && <UserFound navigate={navigate}/>}
-        {!loading &&!name && <Login navigate={navigate} />}
+        {!Loading && userEmail && <UserFound navigate={navigate}/>}
+        {!Loading &&!userEmail && <Login navigate={navigate} />}
         </div>
         </Grid>
 
@@ -95,7 +85,7 @@ function UserFound({navigate}){
     <>
       <div style={{display:"flex",justifyContent:"flex-start"}}>
         <div>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={theme1}>
           <Button variant="contained" size="large" onClick={()=>{
             navigate("/courses")
           }} >
@@ -115,7 +105,7 @@ function Login({navigate}){
   return (
     <>
       <div>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={theme2}>
           <Button variant="contained" size="large" onClick={()=>{
             navigate("/login")
           }} >
