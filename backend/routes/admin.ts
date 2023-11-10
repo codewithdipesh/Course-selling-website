@@ -1,14 +1,20 @@
-const express = require('express');
-const {Admin,Course} = require("../db")
-const {createTokenAdmin,AuthenticateAdmin} = require("../middleware/auth")
+import  express from 'express';
+import  {Admin,Course} from "../db"
+import {createTokenAdmin,AuthenticateAdmin} from "../middleware/auth"
 
 
-const router = express.Router();
+const adminRouter = express.Router();
+
+
+interface userinput{
+  username :string;
+  password:string
+}
 
 // Admin routes
-router.post('/signup', async (req, res) => { //notes
-    // logic to sign up admin
-    const input= req.body;
+adminRouter.post('/signup', async (req, res) => { //notes
+   try{
+    const input:userinput= req.body;
     const admin = await Admin.findOne({username :input.username})  //notes
     if(admin){
       res.status(403).json({message : "Admin with this username already exists" });
@@ -19,14 +25,24 @@ router.post('/signup', async (req, res) => { //notes
       res.status(200).json({message : "Admin Created Successfully" , token : token})
     }
   
+
+   }catch(error){
+    res.sendStatus(403);
+   } 
+    
   });
   
-  router.post('/login', async (req, res) => {
-    // logic to log in admin
-    // console.log("hi")
-    const input= req.headers;
-    // console.log(input.username)
-    // console.log(input.password)
+  adminRouter.post('/login', async (req, res) => {
+    if(!req.headers){
+      return res.sendStatus(403);
+    }
+    if(typeof req.headers.username !== "string" || typeof req.headers.password !== "string"){
+      return res.sendStatus(403);
+    }
+    const input:userinput= {
+      username:req.headers.username,
+      password:req.headers.password
+    }
     const admin = await Admin.findOne({username : input.username , password : input.password})
     // console.log(admin)
     if(admin){
@@ -43,7 +59,7 @@ router.post('/signup', async (req, res) => { //notes
 
 
   
-  router.post('/courses',AuthenticateAdmin, async (req, res) => {
+  adminRouter.post('/courses',AuthenticateAdmin, async (req, res) => {
     // logic to create a course
     const course =  req.body;
     const newCourse = new Course(course)
@@ -52,9 +68,9 @@ router.post('/signup', async (req, res) => { //notes
     
   });
   
-  router.put('/course/:courseId', AuthenticateAdmin, async(req, res) => {
+  adminRouter.put('/course/:courseId', AuthenticateAdmin, async(req, res) => {
     // logic to edit a course
-    const course =  await Course.findByIdAndUpdate(req.params.courseId,req.body,{new : "true"})
+    const course =  await Course.findByIdAndUpdate(req.params.courseId,req.body,{new : true})
     if(course){
          
       
@@ -65,7 +81,7 @@ router.post('/signup', async (req, res) => { //notes
     }
   
   });
-  router.get('/course/:courseId', AuthenticateAdmin, async (req, res) => {
+  adminRouter.get('/course/:courseId', AuthenticateAdmin, async (req, res) => {
     // logic to get a course details
     const courseId = req.params.courseId;
   
@@ -82,7 +98,7 @@ router.post('/signup', async (req, res) => { //notes
   });
   
   
-  router.get('/courses',AuthenticateAdmin, async (req, res) => {
+  adminRouter.get('/courses',AuthenticateAdmin, async (req, res) => {
     // logic to get all courses
     const courses = await Course.find({}); //notes
     res.json({courses})
@@ -90,13 +106,17 @@ router.post('/signup', async (req, res) => { //notes
   
   });
   
-  router.get('/me' , AuthenticateAdmin,(req,res)=>{
-    if (!req.user){
+  adminRouter.get('/me' , AuthenticateAdmin,async(req,res)=>{
+    if (!req.headers.user_id){
       res.status(403).json({message:"Admin Does Not Exists"})
     }
+    const admin = await Admin.findById(req.headers.user_id)
+    if(!admin){
+      return res.sendStatus(403)
+    }
       res.json({
-        username: req.user.username
+        username : admin.username
       })
   })
 
-  module.exports = router;
+  export default adminRouter;

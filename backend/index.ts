@@ -1,10 +1,10 @@
-const express = require('express');
-const jwt = require("jsonwebtoken")
-const bodyParser = require("body-parser")
-const cors = require('cors');
-const mongoose =  require("mongoose");//import
-const adminRouter = require("./routes/admin")
-const userRouter = require("./routes/user")
+import express from 'express';
+import bodyParser from "body-parser"
+import cors from 'cors';
+import mongoose from  "mongoose";
+
+import adminRouter from "./routes/admin";
+import userRouter from "./routes/user";
 
 const app = express();
 
@@ -23,8 +23,6 @@ app.get("/",(req,res)=>{
 //cONNECT TO MongoDB
 //Dont misuse it
 mongoose.connect('mongodb+srv://paldipakdipa2020:dipeshMongo@cluster0.wnwq78z.mongodb.net/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
 })
 
 app.listen(3000, () => {
